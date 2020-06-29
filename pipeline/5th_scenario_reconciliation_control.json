@@ -1,0 +1,309 @@
+{
+	"name": "5th_scenario_reconciliation_control",
+	"properties": {
+		"description": "This pipeline would compare the data captured in the Source system File Integrity Check against the Landing Zone Process Control Log Table, ensuring that:\n\nLanding Zone Batch Debit Amount = Total Debit Amount from the Source interface file\nLanding Zone Batch Credit Amount = Total Credit Amount from the Source interface file\nLanding Zone Batch Record Count = Total Number of Records from the Source Interface file\n",
+		"activities": [
+			{
+				"name": "destination_detail_file",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": "select count(id) recordcounts from\n(select control_file.id from\n(select sum(debit) as sum_debit, sum(credit) as sum_credit, count(claimid) as recordcounts, [month], [year] from destination_detail_file\ngroup by month, year) agreegate_file\ninner join control_file\non agreegate_file.sum_credit = control_file.credit\nand agreegate_file.sum_debit = control_file.debit\nand agreegate_file.recordcounts = control_file.recordcounts\nand agreegate_file.month = control_file.month\nand agreegate_file.year = control_file.year\ngroup by control_file.id,control_file.month, control_file.year) agreegatecount",
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "synapse_control_file",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "match_records",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "destination_detail_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(activity('destination_detail_file').output,'firstrow')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "email_notification_reconciliation_result_failed",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "copy_reconciliation_result_failed",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "EmailTo",
+									"value": "manas.a@hcl.com"
+								},
+								{
+									"name": "Subject",
+									"value": "No Records Found in DEMO_FILE"
+								},
+								{
+									"name": "Activity",
+									"value": "DEMO_FILE Copy Activity"
+								},
+								{
+									"name": "ErrorMessage",
+									"value": "Copy is halted because no records found in the DEMO_FILE"
+								}
+							],
+							"typeProperties": {
+								"url": "https://prod-38.eastus2.logic.azure.com:443/workflows/0eccc6e518d549d49f0cabab276f0a15/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=S4wx8htrhAIrNG0OaO6mvkUe-UFqAxyBpQ-VsJv7nnM",
+								"method": "POST",
+								"headers": {
+									"Content-Type": "application/json"
+								},
+								"body": {
+									"DataFactoryName": "@{pipeline().DataFactory}",
+									"PipelineName": "@{pipeline().Pipeline}",
+									"Subject": "CNO: Data Reconciliation Process Failed",
+									"ErrorMessage": "Data Reconciliation Process Failed! Please check the logs.",
+									"EmailTo": "manas.a@hcl.com"
+								}
+							}
+						},
+						{
+							"name": "copy_reconciliation_result_failed",
+							"description": "This copy activity would copy the data of detail_file",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"preCopyScript": "insert into reconciliation_result_log values ('5', 'Reconciliation Failed')",
+									"allowPolyBase": true,
+									"polyBaseSettings": {
+										"rejectValue": 0,
+										"rejectType": "value",
+										"useTypeDefault": true
+									},
+									"disableMetricsCollection": false
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_poc_stage_adls",
+										"type": "LinkedServiceReference"
+									},
+									"path": "staging-container"
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "cycleid",
+												"type": "String"
+											},
+											"sink": {
+												"name": "cycleid",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "result"
+											},
+											"sink": {
+												"name": "result",
+												"type": "String"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "synapse_landing_zone_process_control_log",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "synapse_reconciliation_result_log",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "copy_reconciliation_result",
+							"description": "This copy activity would copy the data of detail_file",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"preCopyScript": "insert into reconciliation_result_log values ('5', 'Reconciliation Successful')",
+									"allowPolyBase": true,
+									"polyBaseSettings": {
+										"rejectValue": 0,
+										"rejectType": "value",
+										"useTypeDefault": true
+									},
+									"disableMetricsCollection": false
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_poc_stage_adls",
+										"type": "LinkedServiceReference"
+									},
+									"path": "staging-container"
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "cycleid",
+												"type": "String"
+											},
+											"sink": {
+												"name": "cycleid",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "result"
+											},
+											"sink": {
+												"name": "result",
+												"type": "String"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "synapse_landing_zone_process_control_log",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "synapse_reconciliation_result_log",
+									"type": "DatasetReference"
+								}
+							]
+						},
+						{
+							"name": "email_notification_reconciliation_success",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "copy_reconciliation_result",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "EmailTo",
+									"value": "manas.a@hcl.com"
+								},
+								{
+									"name": "Subject",
+									"value": "No Records Found in DEMO_FILE"
+								},
+								{
+									"name": "Activity",
+									"value": "DEMO_FILE Copy Activity"
+								},
+								{
+									"name": "ErrorMessage",
+									"value": "Copy is halted because no records found in the DEMO_FILE"
+								}
+							],
+							"typeProperties": {
+								"url": "https://prod-38.eastus2.logic.azure.com:443/workflows/0eccc6e518d549d49f0cabab276f0a15/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=S4wx8htrhAIrNG0OaO6mvkUe-UFqAxyBpQ-VsJv7nnM",
+								"method": "POST",
+								"headers": {
+									"Content-Type": "application/json"
+								},
+								"body": {
+									"DataFactoryName": "@{pipeline().DataFactory}",
+									"PipelineName": "@{pipeline().Pipeline}",
+									"Subject": "CNO: Data Reconciliation Process Successful",
+									"ErrorMessage": "Data Reconciliation Process Successful! Please check the logs.",
+									"EmailTo": "manas.a@hcl.com"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

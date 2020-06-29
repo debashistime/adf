@@ -1,0 +1,61 @@
+{
+	"name": "adls_destination_control_file",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_cnodev_adf_demo",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Destination_Control_File_20062020.csv",
+				"fileSystem": "cno-destination-container-adf-demo"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "id",
+				"type": "String"
+			},
+			{
+				"name": "cycleid",
+				"type": "String"
+			},
+			{
+				"name": "controlid",
+				"type": "String"
+			},
+			{
+				"name": "credit",
+				"type": "String"
+			},
+			{
+				"name": "debit",
+				"type": "String"
+			},
+			{
+				"name": "recordcounts",
+				"type": "String"
+			},
+			{
+				"name": "result",
+				"type": "String"
+			},
+			{
+				"name": "month",
+				"type": "String"
+			},
+			{
+				"name": "year ",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

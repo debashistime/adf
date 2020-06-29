@@ -1,0 +1,52 @@
+{
+	"name": "synapse_destination_control_file_onpremise",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservice_synapse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "controlid",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "credit",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "debit",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "recordcounts",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "month",
+				"type": "varchar"
+			},
+			{
+				"name": "year",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "destination_control_file_onpremise"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

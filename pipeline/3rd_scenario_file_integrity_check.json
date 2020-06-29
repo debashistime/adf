@@ -1,0 +1,370 @@
+{
+	"name": "3rd_scenario_file_integrity_check",
+	"properties": {
+		"description": "This pipeline would perform the following checks.  \n\nFile Debit Amounts = Control Debit Amounts\nFile Credit Amounts = Control Credit Amounts\nFile Debit Amounts = File Credit Amounts\nFile Record Counts = Control Record Counts\n",
+		"activities": [
+			{
+				"name": "control_file",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": "select count(id) recordcounts from\n(select control_file.id from\n(select sum(debit) as sum_debit, sum(credit) as sum_credit, count(claimid) as recordcounts, [month], [year] from detail_file \ngroup by detail_file.month, detail_file.year ) agreegate_file\ninner join control_file\non agreegate_file.sum_credit = control_file.credit\nand agreegate_file.sum_debit = control_file.debit\nand agreegate_file.recordcounts = control_file.recordcounts\nand agreegate_file.month = control_file.month\nand agreegate_file.year = control_file.year\ngroup by control_file.id,control_file.month, control_file.year) agreegatecount",
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "synapse_detail_file",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "match_records",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "control_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "detail_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('detail_file').output.firstrow.recordcounts,activity('control_file').output.firstrow.recordcounts)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "email_notification_file_integrity_check",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "EmailTo",
+									"value": "manas.a@hcl.com"
+								},
+								{
+									"name": "Subject",
+									"value": "No Records Found in DEMO_FILE"
+								},
+								{
+									"name": "Activity",
+									"value": "DEMO_FILE Copy Activity"
+								},
+								{
+									"name": "ErrorMessage",
+									"value": "Copy is halted because no records found in the DEMO_FILE"
+								}
+							],
+							"typeProperties": {
+								"url": "https://prod-38.eastus2.logic.azure.com:443/workflows/0eccc6e518d549d49f0cabab276f0a15/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=S4wx8htrhAIrNG0OaO6mvkUe-UFqAxyBpQ-VsJv7nnM",
+								"method": "POST",
+								"headers": {
+									"Content-Type": "application/json"
+								},
+								"body": {
+									"DataFactoryName": "@{pipeline().DataFactory}",
+									"PipelineName": "@{pipeline().Pipeline}",
+									"Subject": "CNO: File Integrity Check Failed",
+									"ErrorMessage": "File Integrity Check Failed! Please check the logs.",
+									"EmailTo": "manas.a@hcl.com"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "data_ingestion_detail_file",
+							"description": "This copy activity would copy the data of demo_file",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": "select * from detail_file",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"allowPolyBase": true,
+									"polyBaseSettings": {
+										"rejectValue": 0,
+										"rejectType": "value",
+										"useTypeDefault": true
+									},
+									"disableMetricsCollection": false
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_poc_stage_adls",
+										"type": "LinkedServiceReference"
+									},
+									"path": "staging-container"
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "claimid",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "claimid",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "credit",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "credit",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "debit",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "debit",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "day",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "day",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "month",
+												"type": "String"
+											},
+											"sink": {
+												"name": "month",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "year",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "year",
+												"type": "Int32"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "synapse_detail_file",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "synapse_destination_detail_file",
+									"type": "DatasetReference"
+								}
+							]
+						},
+						{
+							"name": "data_ingestion_control_file",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "data_ingestion_detail_file",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": "select * from control_file",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"preCopyScript": "insert into landing_zone_process_control_log \nselect '3', debit, credit, recordcounts,'File Integrity Check-Data Ingested Successfully', [month], [year]\nfrom destination_control_file",
+									"allowPolyBase": true,
+									"polyBaseSettings": {
+										"rejectValue": 0,
+										"rejectType": "value",
+										"useTypeDefault": true
+									},
+									"disableMetricsCollection": false
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_poc_stage_adls",
+										"type": "LinkedServiceReference"
+									},
+									"path": "staging-container"
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "controlid",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "controlid",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "credit",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "credit",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "debit",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "debit",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "recordcounts",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "recordcounts",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "month",
+												"type": "String"
+											},
+											"sink": {
+												"name": "month",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "year",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "year",
+												"type": "Int32"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "synapse_control_file",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "synapse_destination_control_file",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "detail_file",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": "select count(*) recordcounts from\n(select sum(debit) as sum_debit, sum(credit) as sum_credit, count(claimid) as recordcounts, [month], [year] from detail_file \ngroup by detail_file.month, detail_file.year) detail_file",
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "synapse_detail_file",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

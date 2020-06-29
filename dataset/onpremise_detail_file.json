@@ -1,0 +1,23 @@
+{
+	"name": "onpremise_detail_file",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_fetch_demo_file",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FileServerLocation",
+				"fileName": "Detail_File_20062020.csv",
+				"folderPath": "CNO/Onpremise_Data/Landing_Zone/2020/20062020"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

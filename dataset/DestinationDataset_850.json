@@ -1,0 +1,23 @@
+{
+	"name": "DestinationDataset_850",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_poc_adls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "hcl_to",
+				"fileSystem": "source-container"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

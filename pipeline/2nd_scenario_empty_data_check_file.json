@@ -1,0 +1,374 @@
+{
+	"name": "2nd_scenario_empty_data_check_file",
+	"properties": {
+		"description": "Check whether a file exists or not also check whether its empty or it has records.\n\nThis pipeline would check to ensure that Demo File contains records.  Downstream processing would be halted and an email notification would be sent if Demo File records are not present. ",
+		"activities": [
+			{
+				"name": "onpremise_detail_file",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "onpremise_detail_file",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"exists",
+						"size",
+						"itemName",
+						"lastModified",
+						"created"
+					],
+					"storeSettings": {
+						"type": "FileServerReadSettings",
+						"recursive": true
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "check_records_count_demo_file",
+				"description": "If condition activity would check whether demo_file contains records or not. If record exist then it would trigger the copy activity otherwise and email notification would be sent and copy processes would be halted.",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "onpremise_detail_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "onpremise_control_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@and(\n\tand(\n\t\tactivity('onpremise_detail_file').output.Exists, \n\t\tgreater(activity('onpremise_detail_file').output.Size,2)\n\t)\n,\n\tand(\n\t\tactivity('onpremise_control_file').output.Exists,\n\t\tgreater(activity('onpremise_control_file').output.Size,2)\n\t)\n)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "email_notification_empty_data",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "EmailTo",
+									"value": "manas.a@hcl.com"
+								},
+								{
+									"name": "Subject",
+									"value": "No Records Found in DEMO_FILE"
+								},
+								{
+									"name": "Activity",
+									"value": "DEMO_FILE Copy Activity"
+								},
+								{
+									"name": "ErrorMessage",
+									"value": "Copy is halted because no records found in the DEMO_FILE"
+								}
+							],
+							"typeProperties": {
+								"url": "https://prod-38.eastus2.logic.azure.com:443/workflows/0eccc6e518d549d49f0cabab276f0a15/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=S4wx8htrhAIrNG0OaO6mvkUe-UFqAxyBpQ-VsJv7nnM",
+								"method": "POST",
+								"headers": {
+									"Content-Type": "application/json"
+								},
+								"body": {
+									"DataFactoryName": "@{pipeline().DataFactory}",
+									"PipelineName": "@{pipeline().Pipeline}",
+									"Subject": "CNO: Empty File Notification",
+									"ErrorMessage": "No records found! Please check the logs.",
+									"EmailTo": "manas.a@hcl.com"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "data_ingestion_detail_file_onpremise_adls",
+							"description": "This copy activity would copy the data of demo_file",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "FileServerReadSettings",
+										"recursive": true
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_poc_stage_adls",
+										"type": "LinkedServiceReference"
+									},
+									"path": "staging-container"
+								},
+								"enableSkipIncompatibleRow": true,
+								"logStorageSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_adls_cnodev_adf_demo",
+										"type": "LinkedServiceReference"
+									},
+									"path": "log-details-container"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "onpremise_detail_file",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "adls_destination_detail_file",
+									"type": "DatasetReference"
+								}
+							]
+						},
+						{
+							"name": "data_ingestion_control_file_onpremise_adls",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "data_ingestion_detail_file_onpremise_adls",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "FileServerReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_poc_stage_adls",
+										"type": "LinkedServiceReference"
+									},
+									"path": "staging-container"
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "id",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "id",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "cycleid",
+												"type": "String"
+											},
+											"sink": {
+												"name": "cycleid",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "controlid",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "controlid",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "credit",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "credit",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "debit",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "debit",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "recordcounts",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "recordcounts",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "result",
+												"type": "String"
+											},
+											"sink": {
+												"name": "result",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "month",
+												"type": "String"
+											},
+											"sink": {
+												"name": "month",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "year ",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "year ",
+												"type": "Int32"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "onpremise_control_file",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "adls_destination_control_file",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "onpremise_control_file",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "onpremise_control_file",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"exists",
+						"size",
+						"itemName",
+						"lastModified",
+						"created"
+					],
+					"storeSettings": {
+						"type": "FileServerReadSettings",
+						"recursive": true
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			}
+		],
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

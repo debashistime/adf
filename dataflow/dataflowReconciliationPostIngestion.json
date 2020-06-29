@@ -1,0 +1,55 @@
+{
+	"name": "dataflowReconciliationPostIngestion",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Reconciliation_Src_Data",
+						"type": "DatasetReference"
+					},
+					"name": "sourceLiveADLSGen2"
+				},
+				{
+					"dataset": {
+						"referenceName": "Control_File",
+						"type": "DatasetReference"
+					},
+					"name": "ControlFile"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ADLSSinkDataset_Data_Flow",
+						"type": "DatasetReference"
+					},
+					"name": "GenerateReconcileReport"
+				},
+				{
+					"dataset": {
+						"referenceName": "Reconcile_Failure_Sink",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AggregateLiveData"
+				},
+				{
+					"name": "JoinLiveDatawithControlFile"
+				},
+				{
+					"name": "DerivedStatusColumn"
+				},
+				{
+					"name": "ConditionalSplit1"
+				}
+			],
+			"script": "source(output(\n\t\tclaimid as integer '000',\n\t\tclaim_amount as integer '000',\n\t\tclaim_status as string,\n\t\tclaim_date as string,\n\t\tfn as string,\n\t\tlname as string,\n\t\tclaim_month as integer '000',\n\t\tclaim_year as integer '000'\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false) ~> sourceLiveADLSGen2\nsource(output(\n\t\tagreegate_claim_id as integer '000',\n\t\tagreegate_claim_amount as integer '000',\n\t\tagreegate_claim_month as integer '000',\n\t\tagreegate_claim_year as integer '000'\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false) ~> ControlFile\nsourceLiveADLSGen2 aggregate(groupBy(claim_year,\n\t\tclaim_month),\n\tclaim_amount = sum(claim_amount)) ~> AggregateLiveData\nAggregateLiveData, ControlFile join(claim_year == agreegate_claim_year\n\t&& claim_month == agreegate_claim_month,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> JoinLiveDatawithControlFile\nConditionalSplit1@ReconcileSuccess derive(claim_month = claim_month,\n\t\tclaim_year = claim_year,\n\t\tclaim_amount = claim_amount,\n\t\tagreegate_claim_amount = agreegate_claim_amount,\n\t\tagreegate_claim_id = iif(claim_amount==agreegate_claim_amount,'Reconciliation Successful','Reconciliation Failed')) ~> DerivedStatusColumn\nJoinLiveDatawithControlFile split(claim_amount==agreegate_claim_amount,\n\tdisjoint: false) ~> ConditionalSplit1@(ReconcileSuccess, ReconcileFailure)\nDerivedStatusColumn sink(allowSchemaDrift: true,\n\tvalidateSchema: true,\n\tpartitionFileNames:[(concat('Pre_Ingestion_Reconciliation_Result',toString(currentTimestamp()),'.txt'))],\n\tmapColumn(\n\t\tclaim_month,\n\t\tclaim_year,\n\t\tclaim_amount,\n\t\tagreegate_claim_amount,\n\t\tStatus = agreegate_claim_id\n\t),\n\tpartitionBy('hash', 1)) ~> GenerateReconcileReport\nConditionalSplit1@ReconcileFailure sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:[(concat('Pre_Ingestion_Reconciliation_Failure',toString(currentTimestamp()),'.txt'))],\n\ttruncate: true,\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+		}
+	}
+}

@@ -1,0 +1,7 @@
+{
+	"name": "ir-onpremise",
+	"properties": {
+		"type": "SelfHosted",
+		"description": "this integration runtime connects to onpremise machine to read demo files data"
+	}
+}

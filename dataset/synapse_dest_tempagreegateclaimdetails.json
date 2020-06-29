@@ -1,0 +1,38 @@
+{
+	"name": "synapse_dest_tempagreegateclaimdetails",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSynapseAnalytics3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "agreegate_claim_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "agreegate_claim_amount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "agreegate_claim_month",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "agreegate_claim_year",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dest_tempAgreegateClaimDetails"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

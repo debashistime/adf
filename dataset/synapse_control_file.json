@@ -1,0 +1,47 @@
+{
+	"name": "synapse_control_file",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservice_synapse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "credit",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "debit",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "recordcounts",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "month",
+				"type": "varchar"
+			},
+			{
+				"name": "year",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "control_file"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

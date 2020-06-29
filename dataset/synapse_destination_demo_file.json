@@ -1,0 +1,47 @@
+{
+	"name": "synapse_destination_demo_file",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservice_synapse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "claimid",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "credit",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "debit",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "day",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "month",
+				"type": "varchar"
+			},
+			{
+				"name": "year",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "destination_demo_file"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,29 @@
+{
+	"name": "SourceDataset_850",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_poc_adls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "testfile1.txt",
+				"folderPath": "hcl_from",
+				"fileSystem": "source-container"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

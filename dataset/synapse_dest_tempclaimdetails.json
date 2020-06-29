@@ -1,0 +1,56 @@
+{
+	"name": "synapse_dest_tempclaimdetails",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSynapseAnalytics3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [
+			{
+				"name": "claimid",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "claim_amount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "claim_status",
+				"type": "varchar"
+			},
+			{
+				"name": "claim_date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "fn",
+				"type": "varchar"
+			},
+			{
+				"name": "lname",
+				"type": "varchar"
+			},
+			{
+				"name": "claim_month",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "claim_year",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dest_tempClaimDetails"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

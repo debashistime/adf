@@ -1,0 +1,25 @@
+{
+	"name": "poc_trigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "copy_pipeline_poc",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/source-container/blobs/",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/ef4b2f05-659f-44f2-bc91-a98dd1a7e388/resourceGroups/CNOPoc/providers/Microsoft.Storage/storageAccounts/cnoadls",
+			"events": [
+				"Microsoft.Storage.BlobCreated",
+				"Microsoft.Storage.BlobDeleted"
+			]
+		}
+	}
+}
