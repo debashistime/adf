@@ -1,0 +1,6 @@
+{
+	"name": "on-prem-debashis",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
