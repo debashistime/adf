@@ -13,7 +13,7 @@
 				"fileName": "fixed_width_src_file.txt",
 				"folderPath": "Users/debashis.c/srcfile"
 			},
-			"columnDelimiter": "",
+			"columnDelimiter": "|",
 			"escapeChar": "\\",
 			"quoteChar": "\""
 		},
