@@ -11,7 +11,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": "dest_tempClaimDetails.csv",
-				"folderPath": "src_data",
+				"folderPath": "src_data/stage",
 				"fileSystem": "source-container"
 			},
 			"columnDelimiter": ",",
