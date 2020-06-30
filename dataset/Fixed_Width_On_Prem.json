@@ -1,0 +1,27 @@
+{
+	"name": "Fixed_Width_On_Prem",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_recon_src",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "fixed_width_sample.dat",
+				"folderPath": "src_data",
+				"fileSystem": "source-container"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"type": "String"
+			}
+		]
+	}
+}
