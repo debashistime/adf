@@ -5,12 +5,20 @@
 		"typeProperties": {
 			"sources": [
 				{
+					"dataset": {
+						"referenceName": "Fixed_Width_On_Prem",
+						"type": "DatasetReference"
+					},
 					"name": "source1"
 				}
 			],
 			"sinks": [],
-			"transformations": [],
-			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1"
+			"transformations": [
+				{
+					"name": "DerivedColumn1"
+				}
+			],
+			"script": "source(output(\n\t\tColumn_1 as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1\nsource1 derive(claimid = substring(Column_1,1,3),\n\t\tclaim_amount = substring(Column_1,4,5),\n\t\tclaim_status = substring(Column_1,9,10)) ~> DerivedColumn1"
 		}
 	}
 }
