@@ -1,0 +1,17 @@
+{
+	"name": "ls_on_prem_debashis",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "FileServer",
+		"typeProperties": {
+			"host": "c:\\",
+			"userId": "hcltech\\debashis.c",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJmODE2MTY1Ni02MjNhLTRkNGQtODljNi0xNWNkNDlhNmNiZTQiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "on-prem-debashis",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
