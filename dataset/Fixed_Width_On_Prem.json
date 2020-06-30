@@ -14,7 +14,7 @@
 				"folderPath": "src_data",
 				"fileSystem": "source-container"
 			},
-			"columnDelimiter": ",",
+			"columnDelimiter": "",
 			"escapeChar": "\\",
 			"quoteChar": "\""
 		},
