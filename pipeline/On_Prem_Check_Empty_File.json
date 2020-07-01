@@ -1,0 +1,99 @@
+{
+	"name": "On_Prem_Check_Empty_File",
+	"properties": {
+		"activities": [
+			{
+				"name": "Metadata_On_Prem_Check_Empty",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "Fixed_Width_On_Prem",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"exists",
+						"size"
+					],
+					"storeSettings": {
+						"type": "FileServerReadSettings"
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If_On_Prem_Check_Empty",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Metadata_On_Prem_Check_Empty",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@and(\n\t\tactivity('Metadata_On_Prem_Check_Empty').output.Exists, \n\t\tgreater(activity('Metadata_On_Prem_Check_Empty').output.Size,0)\n\t)\n",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Send_Empty_or_Not_Exist_Email",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": "https://prod-21.eastus2.logic.azure.com:443/workflows/7b56c8fbb0f848e0a0adb326ffd11eba/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8ST62FnrHXliMjpBQntwY0IvYfe59Di4gYw5rZt3_GM",
+								"method": "POST",
+								"headers": {
+									"Content-Type": "application/json"
+								},
+								"body": {
+									"value": "@concat('{\"DataFactoryName\":\"',pipeline().DataFactory,'\",\"EmailTo\":\"debashis.c@hcl.com\",\"ErrorMessage\":\"Source File Not Found or is Empty\",\"PipelineName\":\"',pipeline().Pipeline,'\",\"Subject\":\"cnodfdev: Source File Not Found or is Empty\"}','')",
+									"type": "Expression"
+								},
+								"linkedServices": [],
+								"datasets": []
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Execute_Fixed_Width_Reconciliation_Pipeline",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Fixed_Width_Reconciliation_Pipeline_Pre_Ingestion",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": false
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": []
+	}
+}
