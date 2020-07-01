@@ -10,9 +10,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "dest_tempClaimDetails.csv",
-				"folderPath": "src_data/stage",
-				"fileSystem": "source-container"
+				"folderPath": "adf_import_data",
+				"fileSystem": "destination-container"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
