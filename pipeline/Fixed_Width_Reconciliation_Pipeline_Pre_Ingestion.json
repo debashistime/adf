@@ -152,7 +152,7 @@
 					],
 					"ifTrueActivities": [
 						{
-							"name": "Send_Failure_email",
+							"name": "Send_Success_email",
 							"type": "WebActivity",
 							"dependsOn": [],
 							"policy": {
@@ -170,12 +170,11 @@
 									"Content-Type": "application/json"
 								},
 								"body": {
-									"DataFactoryName": "cnodfdev",
-									"EmailTo": "debashis.c@hcl.com",
-									"ErrorMessage": "Reconciliation Failed",
-									"PipelineName": "Reconciliation_Pipeline_Pre_Ingestion",
-									"Subject": "cnodfdev: Reconciliation Failed"
-								}
+									"value": "@concat('{\"DataFactoryName\":\"',pipeline().DataFactory,'\",\"EmailTo\":\"debashis.chcl.com\",\"ErrorMessage\":\"Reconciliation Failed\",\"PipelineName\":\"',pipeline().Pipeline,'\",\"Subject\":\"cnodfdev: Reconciliation Successful\"}','')",
+									"type": "Expression"
+								},
+								"linkedServices": [],
+								"datasets": []
 							}
 						}
 					]
