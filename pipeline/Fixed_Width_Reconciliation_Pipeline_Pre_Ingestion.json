@@ -59,7 +59,7 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "Send_Success_Email",
+							"name": "Send_Failure_Email",
 							"type": "WebActivity",
 							"dependsOn": [],
 							"policy": {
@@ -77,77 +77,12 @@
 									"Content-Type": "application/json"
 								},
 								"body": {
-									"DataFactoryName": "cnodfdev",
-									"EmailTo": "debashis.c@hcl.com",
-									"ErrorMessage": "Reconciliation Successful",
-									"PipelineName": "Reconciliation_Pipeline_Pre_Ingestion",
-									"Subject": "cnodfdev: Reconciliation Successful"
-								}
+									"value": "@concat('{\"DataFactoryName\":\"',pipeline().DataFactory,'\",\"EmailTo\":\"debashis.chcl.com\",\"ErrorMessage\":\"Reconciliation Failed\",\"PipelineName\":\"',pipeline().Pipeline,'\",\"Subject\":\"cnodfdev: Reconciliation Failed\"}','')",
+									"type": "Expression"
+								},
+								"linkedServices": [],
+								"datasets": []
 							}
-						},
-						{
-							"name": "Copy_Data_On_Prem_ADLS_Gen2",
-							"type": "Copy",
-							"dependsOn": [
-								{
-									"activity": "Send_Success_Email",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "7.00:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": true
-									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
-								},
-								"sink": {
-									"type": "DelimitedTextSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "DelimitedTextWriteSettings",
-										"quoteAllText": true,
-										"fileExtension": ".txt"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "Reconciliation_Src_Data",
-									"type": "DatasetReference"
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "ADLSSinkDataset",
-									"type": "DatasetReference"
-								}
-							]
 						}
 					],
 					"ifTrueActivities": [
