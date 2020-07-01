@@ -10,6 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": "Pre_Ingestion_Reconciliation_Failure.txt",
 				"folderPath": "adf_reconcile_report/failure",
 				"fileSystem": "destination-container"
 			},
