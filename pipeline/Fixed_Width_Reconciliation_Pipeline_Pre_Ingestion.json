@@ -39,7 +39,7 @@
 									"Content-Type": "application/json"
 								},
 								"body": {
-									"value": "@concat('{\"DataFactoryName\":\"',pipeline().DataFactory,'\",\"EmailTo\":\"debashis.chcl.com\",\"ErrorMessage\":\"Reconciliation Failed\",\"PipelineName\":\"',pipeline().Pipeline,'\",\"Subject\":\"cnodfdev: Reconciliation Failed\"}','')",
+									"value": "@concat('{\"DataFactoryName\":\"',pipeline().DataFactory,'\",\"EmailTo\":\"debashis.c@hcl.com\",\"ErrorMessage\":\"Reconciliation Failed\",\"PipelineName\":\"',pipeline().Pipeline,'\",\"Subject\":\"cnodfdev: Reconciliation Failed\"}','')",
 									"type": "Expression"
 								},
 								"linkedServices": [],
@@ -67,7 +67,7 @@
 									"Content-Type": "application/json"
 								},
 								"body": {
-									"value": "@concat('{\"DataFactoryName\":\"',pipeline().DataFactory,'\",\"EmailTo\":\"debashis.chcl.com\",\"ErrorMessage\":\"Reconciliation Failed\",\"PipelineName\":\"',pipeline().Pipeline,'\",\"Subject\":\"cnodfdev: Reconciliation Successful\"}','')",
+									"value": "@concat('{\"DataFactoryName\":\"',pipeline().DataFactory,'\",\"EmailTo\":\"debashis.c@hcl.com\",\"ErrorMessage\":\"Reconciliation Failed\",\"PipelineName\":\"',pipeline().Pipeline,'\",\"Subject\":\"cnodfdev: Reconciliation Successful\"}','')",
 									"type": "Expression"
 								},
 								"linkedServices": [],
