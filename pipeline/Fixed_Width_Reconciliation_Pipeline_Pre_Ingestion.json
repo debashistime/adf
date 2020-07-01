@@ -211,7 +211,9 @@
 						"referenceName": "Reconcile_Failure_Sink",
 						"type": "DatasetReference"
 					},
-					"fieldList": [],
+					"fieldList": [
+						"size"
+					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings"
 					},
