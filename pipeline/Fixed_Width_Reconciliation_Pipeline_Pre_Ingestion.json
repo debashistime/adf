@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(activity('Check_Output').output.Size,1)",
+						"value": "@equals(activity('Check_Output').output.Size,121)",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
